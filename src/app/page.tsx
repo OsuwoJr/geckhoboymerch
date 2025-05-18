@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import DepositModalWrapper from "@/components/DepositModalWrapper";
+import DonateModal from "@/components/DonateModal";
 import { Suspense } from 'react';
 import Header from './components/Header';
 import Hero from './components/Hero';
@@ -37,7 +37,7 @@ export default function Home() {
             onClick={handleOpenModal}
             className="px-4 py-2 bg-[#a0b921] text-white rounded-lg shadow-lg hover:bg-[#8ca01b] transition-colors"
           >
-            Open Deposit Modal
+            DONATE
           </button>
         </div>
         <FeaturedMerch />
@@ -45,10 +45,10 @@ export default function Home() {
       </Suspense>
       <Footer />
 
-      <DepositModalWrapper
+      <DonateModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
-        amount={100}
+        defaultAmount={100}
       />
     </main>
   );
