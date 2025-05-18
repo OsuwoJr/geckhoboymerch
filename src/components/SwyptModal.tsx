@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useSwyptIntegration } from '../hooks/useSwyptIntegration';
 
 // Ensure React is available globally
@@ -18,9 +18,30 @@ const SwyptWrapper = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
+// Configure API endpoint based on environment
+const API_ENDPOINT = process.env.NODE_ENV === 'production' 
+  ? '/api/swypt-proxy'  // Use our proxy in production
+  : 'https://pool.swypt.io/api/merchant-onramp'; // Direct API call in development
+
 // Ensure we're using the project's React version
 const DepositModal = dynamic(
-  () => import("swypt-checkout").then((mod) => mod.DepositModal),
+  () => import("swypt-checkout").then((mod) => {
+    console.log('Swypt checkout module loaded:', mod);
+    const ModalComponent = mod.DepositModal;
+    
+    // Return a wrapped version of the modal that uses our proxy
+    return function WrappedModal(props: any) {
+      return (
+        <ModalComponent 
+          {...props} 
+          apiEndpoint={API_ENDPOINT}
+        />
+      );
+    };
+  }).catch(error => {
+    console.error('Error loading swypt-checkout:', error);
+    throw error;
+  }),
   { 
     ssr: false,
     loading: () => <div>Loading...</div>
@@ -40,9 +61,24 @@ interface SwyptModalProps {
 export default function SwyptModal(props: SwyptModalProps) {
   useSwyptIntegration();
 
+  useEffect(() => {
+    // Log props when they change
+    console.log('SwyptModal props:', props);
+    
+    // Add global error handler for payment-related errors
+    const handlePaymentError = (event: ErrorEvent) => {
+      console.error('Payment error:', event.error);
+    };
+    
+    window.addEventListener('error', handlePaymentError);
+    return () => window.removeEventListener('error', handlePaymentError);
+  }, [props]);
+
   return (
-    <React.Suspense fallback={<div>Loading...</div>}>
-      <DepositModal {...props} />
-    </React.Suspense>
+    <SwyptWrapper>
+      <React.Suspense fallback={<div>Loading...</div>}>
+        <DepositModal {...props} />
+      </React.Suspense>
+    </SwyptWrapper>
   );
 } 

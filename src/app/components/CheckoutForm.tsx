@@ -130,7 +130,7 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({
         type="button"
         onClick={() => setIsModalOpen(true)}
       >
-        Pay with Crypto (${total})
+        Pay with Crypto (KES{total})
       </button>
       <button
         className="checkout-btn"
