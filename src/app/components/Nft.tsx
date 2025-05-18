@@ -60,7 +60,7 @@ const nftTiers = [
     buttonColor: 'bg-amber-500 hover:bg-amber-600',
     symbol: faDiamond,
     buttonText: 'Begin the Exodus',
-    price: '0.14 ETH',
+    price: '0.14',
     totalSupply: 250,
     remaining: 200,
     image: '/images/nft/exodus.jpg',
@@ -99,7 +99,7 @@ const nftTiers = [
     buttonColor: 'bg-blue-500 hover:bg-blue-600',
     symbol: faCircle,
     buttonText: 'Ascend Now',
-    price: '0.29 ETH',
+    price: '0.29',
     totalSupply: 75,
     remaining: 50,
     image: '/images/nft/revelation.jpg',
@@ -130,9 +130,40 @@ const nftTiers = [
 
 const NFT_CONTRACT_ADDRESS = "YOUR_DEPLOYED_CONTRACT_ADDRESS"; // Replace after deployment
 const NFT_ABI = [
-  "function mint() public payable returns (uint256)",
-  "function balanceOf(address owner) view returns (uint256)",
-  "function tokenURI(uint256 tokenId) view returns (string)"
+  {
+    name: "mint",
+    type: "function",
+    stateMutability: "payable",
+    inputs: [{ name: "_tier", type: "uint8" }],
+    outputs: [{ name: "", type: "uint256" }]
+  },
+  {
+    name: "getTierInfo",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "_tier", type: "uint8" }],
+    outputs: [
+      { name: "price", type: "uint256" },
+      { name: "maxSupply", type: "uint256" },
+      { name: "minted", type: "uint256" },
+      { name: "active", type: "bool" },
+      { name: "baseURI", type: "string" }
+    ]
+  },
+  {
+    name: "balanceOf",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "owner", type: "address" }],
+    outputs: [{ name: "", type: "uint256" }]
+  },
+  {
+    name: "tokenURI",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "tokenId", type: "uint256" }],
+    outputs: [{ name: "", type: "string" }]
+  }
 ] as const;
 
 export default function Nft() {
@@ -148,7 +179,8 @@ export default function Nft() {
     address: NFT_CONTRACT_ADDRESS as `0x${string}`,
     abi: NFT_ABI,
     functionName: 'mint',
-    value: selectedTier !== null ? parseEther(nftTiers[selectedTier].price) : parseEther('0'),
+    args: selectedTier !== null ? [selectedTier] : undefined,
+    value: selectedTier !== null ? parseEther(nftTiers[selectedTier].price.replace(" ETH", "")) : parseEther("0"),
     enabled: selectedTier !== null,
   });
 
