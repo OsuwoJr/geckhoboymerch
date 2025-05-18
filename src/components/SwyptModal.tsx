@@ -29,31 +29,7 @@ console.log('Using API endpoint:', API_ENDPOINT);
 const DepositModal = dynamic(
   () => import("swypt-checkout").then((mod) => {
     console.log('Swypt checkout module loaded:', mod);
-    const ModalComponent = mod.DepositModal;
-    
-    // Return a wrapped version of the modal that uses our proxy
-    return function WrappedModal(props: any) {
-      useEffect(() => {
-        const handleMessage = (event: MessageEvent) => {
-          if (event.data?.type?.includes('swypt')) {
-            console.log('Swypt event:', event.data);
-          }
-        };
-
-        window.addEventListener('message', handleMessage);
-        return () => window.removeEventListener('message', handleMessage);
-      }, []);
-
-      return (
-        <ModalComponent 
-          {...props} 
-          apiEndpoint={API_ENDPOINT}
-          onPaymentStart={() => console.log('Payment started')}
-          onPaymentSuccess={(data: any) => console.log('Payment success:', data)}
-          onPaymentError={(error: any) => console.error('Payment error:', error)}
-        />
-      );
-    };
+    return mod.DepositModal;
   }).catch(error => {
     console.error('Error loading swypt-checkout:', error);
     throw error;
@@ -86,16 +62,23 @@ export default function SwyptModal(props: SwyptModalProps) {
       console.error('Payment error:', event.error);
     };
     
-    // Add XHR error monitoring
+    // Add XHR error monitoring with proper TypeScript types
     const originalXHROpen = XMLHttpRequest.prototype.open;
-    XMLHttpRequest.prototype.open = function(...args: any[]) {
+    XMLHttpRequest.prototype.open = function(
+      method: string,
+      url: string | URL,
+      async: boolean = true,
+      username?: string | null,
+      password?: string | null
+    ) {
       this.addEventListener('error', (event) => {
         console.error('XHR Error:', {
-          url: args[1],
-          event: event
+          method,
+          url,
+          event
         });
       });
-      return originalXHROpen.apply(this, args);
+      return originalXHROpen.call(this, method, url, async, username || null, password || null);
     };
     
     window.addEventListener('error', handlePaymentError);
