@@ -22,7 +22,7 @@ interface DepositModalWrapperProps {
   amount: number;
 }
 
-const MERCHANT_ADDRESS = "0x6d19a24D93379D1bA58d28884fFBBEf1bc145387";
+const MERCHANT_ADDRESS = "0xFaCf346acD5011ef0bA484B12D97C3a044cca2Ed";
 
 export default function DepositModalWrapper({
   isOpen,
@@ -62,9 +62,9 @@ export default function DepositModalWrapper({
         <SwyptModal
           isOpen={isOpen}
           onClose={onClose}
-          headerBackgroundColor="linear-gradient(to right, #044639, #FF4040)"
+          headerBackgroundColor="linear-gradient(to right,rgb(14, 15, 11),rgb(136, 204, 46))"
           businessName="GECKHOBOY"
-          merchantName="GECKHOBOYSMERCH"
+          merchantName="GECKHOBOYMERCH"
           merchantAddress={MERCHANT_ADDRESS}
           amount={amount}
         />
