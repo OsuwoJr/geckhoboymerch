@@ -1,4 +1,5 @@
 import React from 'react';
+import DepositModalWrapper from "@/components/DepositModalWrapper";
 
 interface SubscriptionFormProps {
   isOpen: boolean;
@@ -13,7 +14,6 @@ interface FormData {
   name: string;
   whatsapp: string;
   discord: string;
-  mpesaId: string;
   email: string;
 }
 
@@ -22,12 +22,12 @@ const SubscriptionForm: React.FC<SubscriptionFormProps> = ({ isOpen, onClose, se
     name: '',
     whatsapp: '',
     discord: '',
-    mpesaId: '',
     email: ''
   });
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [error, setError] = React.useState('');
   const [success, setSuccess] = React.useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = React.useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -36,6 +36,16 @@ const SubscriptionForm: React.FC<SubscriptionFormProps> = ({ isOpen, onClose, se
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsPaymentModalOpen(true);
+  };
+
+  const handlePaymentComplete = async (paymentSuccessful: boolean) => {
+    setIsPaymentModalOpen(false);
+    
+    if (!paymentSuccessful) {
+      return; // Don't proceed if payment was cancelled or failed
+    }
+
     setIsSubmitting(true);
     setError('');
 
@@ -49,7 +59,8 @@ const SubscriptionForm: React.FC<SubscriptionFormProps> = ({ isOpen, onClose, se
           ...formData,
           subscriptionTier: selectedTier?.name,
           subscriptionPrice: selectedTier?.price,
-          formType: 'Subscription Registration'
+          formType: 'Subscription Registration',
+          paymentMethod: 'Crypto'
         })
       });
 
@@ -59,7 +70,6 @@ const SubscriptionForm: React.FC<SubscriptionFormProps> = ({ isOpen, onClose, se
           name: '',
           whatsapp: '',
           discord: '',
-          mpesaId: '',
           email: ''
         });
       } else {
@@ -73,6 +83,9 @@ const SubscriptionForm: React.FC<SubscriptionFormProps> = ({ isOpen, onClose, se
   };
 
   if (!isOpen) return null;
+
+  // Extract the numeric value from the price string (e.g., "KES 500" -> 500)
+  const amount = selectedTier?.price ? parseInt(selectedTier.price.replace(/[^0-9]/g, '')) : 0;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
@@ -89,7 +102,7 @@ const SubscriptionForm: React.FC<SubscriptionFormProps> = ({ isOpen, onClose, se
             <div className="text-green-500 text-5xl mb-4">✓</div>
             <h3 className="text-2xl font-bold text-white mb-2">Registration Successful!</h3>
             <p className="text-gray-400 mb-6">
-              Thank you for joining {selectedTier?.name}. We&apos;ll verify your payment and contact you shortly.
+              Thank you for joining {selectedTier?.name}. Your subscription is now active!
             </p>
             <button
               onClick={onClose}
@@ -172,22 +185,6 @@ const SubscriptionForm: React.FC<SubscriptionFormProps> = ({ isOpen, onClose, se
                 />
               </div>
 
-              <div>
-                <label htmlFor="mpesaId" className="block text-sm font-medium text-gray-300 mb-1">
-                  M-Pesa Transaction ID
-                </label>
-                <input
-                  type="text"
-                  id="mpesaId"
-                  name="mpesaId"
-                  value={formData.mpesaId}
-                  onChange={handleChange}
-                  required
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="Enter M-Pesa transaction ID"
-                />
-              </div>
-
               {error && (
                 <div className="text-red-500 text-sm">{error}</div>
               )}
@@ -197,12 +194,21 @@ const SubscriptionForm: React.FC<SubscriptionFormProps> = ({ isOpen, onClose, se
                 disabled={isSubmitting}
                 className={`w-full py-3 px-6 rounded-lg bg-green-500 text-white font-medium transition-all duration-200 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed`}
               >
-                {isSubmitting ? 'Submitting...' : 'Complete Registration'}
+                {isSubmitting ? 'Processing...' : 'Proceed to Payment'}
               </button>
             </form>
           </>
         )}
       </div>
+
+      <DepositModalWrapper
+        isOpen={isPaymentModalOpen}
+        onClose={() => {
+          setIsPaymentModalOpen(false);
+          handlePaymentComplete(false); // Pass false to indicate payment was cancelled
+        }}
+        amount={amount}
+      />
     </div>
   );
 };

@@ -23,6 +23,8 @@ const API_ENDPOINT = process.env.NODE_ENV === 'production'
   ? '/api/swypt-proxy'  // Use our proxy in production
   : 'https://pool.swypt.io/api/merchant-onramp'; // Direct API call in development
 
+console.log('Using API endpoint:', API_ENDPOINT);
+
 // Ensure we're using the project's React version
 const DepositModal = dynamic(
   () => import("swypt-checkout").then((mod) => {
@@ -31,10 +33,24 @@ const DepositModal = dynamic(
     
     // Return a wrapped version of the modal that uses our proxy
     return function WrappedModal(props: any) {
+      useEffect(() => {
+        const handleMessage = (event: MessageEvent) => {
+          if (event.data?.type?.includes('swypt')) {
+            console.log('Swypt event:', event.data);
+          }
+        };
+
+        window.addEventListener('message', handleMessage);
+        return () => window.removeEventListener('message', handleMessage);
+      }, []);
+
       return (
         <ModalComponent 
           {...props} 
           apiEndpoint={API_ENDPOINT}
+          onPaymentStart={() => console.log('Payment started')}
+          onPaymentSuccess={(data: any) => console.log('Payment success:', data)}
+          onPaymentError={(error: any) => console.error('Payment error:', error)}
         />
       );
     };
@@ -70,8 +86,23 @@ export default function SwyptModal(props: SwyptModalProps) {
       console.error('Payment error:', event.error);
     };
     
+    // Add XHR error monitoring
+    const originalXHROpen = XMLHttpRequest.prototype.open;
+    XMLHttpRequest.prototype.open = function(...args: any[]) {
+      this.addEventListener('error', (event) => {
+        console.error('XHR Error:', {
+          url: args[1],
+          event: event
+        });
+      });
+      return originalXHROpen.apply(this, args);
+    };
+    
     window.addEventListener('error', handlePaymentError);
-    return () => window.removeEventListener('error', handlePaymentError);
+    return () => {
+      window.removeEventListener('error', handlePaymentError);
+      XMLHttpRequest.prototype.open = originalXHROpen;
+    };
   }, [props]);
 
   return (
