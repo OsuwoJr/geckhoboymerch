@@ -7,14 +7,15 @@ import ClientProvider from "./ClientProvider";
 import '@fortawesome/fontawesome-svg-core/styles.css';
 import './fontawesome';
 import { config } from '@fortawesome/fontawesome-svg-core';
+import { Providers } from './providers';
 // Prevent Font Awesome from adding its CSS since we did it manually above
 config.autoAddCss = false;
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "GECKHO",
-  description: "GECKHO Platform",
+  title: "Geckho Boy Merch",
+  description: "Official Geckho Boy Merchandise and NFTs",
 };
 
 export default function RootLayout({
@@ -28,7 +29,9 @@ export default function RootLayout({
         <Suspense fallback={<div className="flex items-center justify-center min-h-screen">
           <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-[#a0b921]"></div>
         </div>}>
-          <ClientProvider>{children}</ClientProvider>
+          <Providers>
+            <ClientProvider>{children}</ClientProvider>
+          </Providers>
         </Suspense>
       </body>
     </html>

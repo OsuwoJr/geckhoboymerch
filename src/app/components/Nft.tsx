@@ -1,6 +1,9 @@
-'use client';
+"use client";
 
-import React from 'react';
+import { useState } from 'react';
+import { parseEther } from 'viem';
+import { useAccount, useConnect, useContractWrite, usePrepareContractWrite } from 'wagmi';
+import { InjectedConnector } from 'wagmi/connectors/injected';
 import Image from 'next/image';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStar, faDiamond, faCircle } from '@fortawesome/free-solid-svg-icons';
@@ -18,8 +21,7 @@ const nftTiers = [
     hoverBorderColor: 'hover:border-green-500/40',
     buttonColor: 'bg-green-500 hover:bg-green-600',
     symbol: faStar,
-    buttonText: 'Join the Genesis',
-    price: '0.072 ETH',
+    price: '0.072',
     totalSupply: 100,
     remaining: 75,
     image: '/images/nft/genesis.jpg',
@@ -126,7 +128,46 @@ const nftTiers = [
   }
 ];
 
-const Nft = () => {
+const NFT_CONTRACT_ADDRESS = "YOUR_DEPLOYED_CONTRACT_ADDRESS"; // Replace after deployment
+const NFT_ABI = [
+  "function mint() public payable returns (uint256)",
+  "function balanceOf(address owner) view returns (uint256)",
+  "function tokenURI(uint256 tokenId) view returns (string)"
+] as const;
+
+export default function Nft() {
+  const [isMinting, setIsMinting] = useState(false);
+  const [mintingError, setMintingError] = useState("");
+  const [selectedTier, setSelectedTier] = useState<number | null>(null);
+  const { address, isConnected } = useAccount();
+  const { connect } = useConnect({
+    connector: new InjectedConnector(),
+  });
+
+  const { config } = usePrepareContractWrite({
+    address: NFT_CONTRACT_ADDRESS as `0x${string}`,
+    abi: NFT_ABI,
+    functionName: 'mint',
+    value: selectedTier !== null ? parseEther(nftTiers[selectedTier].price) : parseEther('0'),
+    enabled: selectedTier !== null,
+  });
+
+  const { write: mint } = useContractWrite(config);
+
+  const handleMint = async (tierIndex: number) => {
+    try {
+      setSelectedTier(tierIndex);
+      setIsMinting(true);
+      setMintingError("");
+      await mint?.();
+    } catch (error) {
+      console.error('Minting error:', error);
+      setMintingError("Failed to mint NFT. Please try again.");
+    } finally {
+      setIsMinting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-black text-white pt-24 pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -143,7 +184,7 @@ const Nft = () => {
 
         {/* NFT Tiers Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {nftTiers.map((tier) => (
+          {nftTiers.map((tier, index) => (
             <div 
               key={tier.name}
               className={`relative bg-gradient-to-br ${tier.gradient} rounded-2xl p-6 border ${tier.borderColor} ${tier.hoverBorderColor} transition-all duration-300 group hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(var(--tier-color-rgb),0.2)]`}
@@ -162,17 +203,6 @@ const Nft = () => {
                   className="object-cover transition-transform duration-300 group-hover:scale-105"
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 />
-                {/* Coming Soon Badge */}
-                <div className="absolute top-2 right-2">
-                  <div className={`px-3 py-1 rounded-full text-xs font-bold ${tier.buttonColor} text-white shadow-lg`}>
-                    Coming Soon
-                  </div>
-                </div>
-                {/* Theme and Style Info */}
-                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/90 to-transparent">
-                  <p className="text-sm text-white font-medium">{tier.theme}</p>
-                  <p className="text-xs text-gray-300">{tier.style}</p>
-                </div>
               </div>
 
               {/* Tier Header */}
@@ -194,7 +224,7 @@ const Nft = () => {
               <div className="space-y-4 mb-6">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Price</span>
-                  <span className="font-medium">{tier.price}</span>
+                  <span className="font-medium">{tier.price} ETH</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Total Supply</span>
@@ -226,11 +256,28 @@ const Nft = () => {
               </div>
 
               {/* Mint Button */}
-              <button
-                className={`w-full py-3 px-6 rounded-lg ${tier.buttonColor} text-white font-medium transition-all duration-200 hover:shadow-lg hover:shadow-${tier.color}-500/20 hover:-translate-y-0.5`}
-              >
-                {tier.buttonText}
-              </button>
+              {!isConnected ? (
+                <button
+                  onClick={() => connect()}
+                  className={`w-full py-3 px-6 rounded-lg ${tier.buttonColor} text-white font-medium transition-all duration-200 hover:shadow-lg hover:shadow-${tier.color}-500/20 hover:-translate-y-0.5`}
+                >
+                  Connect Wallet
+                </button>
+              ) : (
+                <button
+                  onClick={() => handleMint(index)}
+                  disabled={isMinting}
+                  className={`w-full py-3 px-6 rounded-lg ${
+                    isMinting ? 'bg-gray-500' : tier.buttonColor
+                  } text-white font-medium transition-all duration-200 hover:shadow-lg hover:shadow-${tier.color}-500/20 hover:-translate-y-0.5`}
+                >
+                  {isMinting ? 'Minting...' : `Mint for ${tier.price} ETH`}
+                </button>
+              )}
+
+              {mintingError && selectedTier === index && (
+                <p className="text-red-500 mt-4 text-sm text-center">{mintingError}</p>
+              )}
             </div>
           ))}
         </div>
@@ -247,6 +294,4 @@ const Nft = () => {
       </div>
     </div>
   );
-};
-
-export default Nft; 
+} 
