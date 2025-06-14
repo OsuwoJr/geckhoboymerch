@@ -399,10 +399,10 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(true)}
-                  className="w-full bg-yellow-600 text-white py-4 px-6 rounded-lg font-medium text-lg hover:bg-yellow-700 focus:ring-4 focus:ring-yellow-500/50 transition-all flex items-center justify-center"
+                  className="w-full bg-rose-600 text-white py-4 px-6 rounded-lg font-medium text-lg hover:bg-yellow-700 focus:ring-4 focus:ring-yellow-500/50 transition-all flex items-center justify-center"
                 >
                   <span className="mr-2">🔐</span>
-                  Pay with Crypto (KES {total.toLocaleString()})
+                  Pay with swypt (KES {total.toLocaleString()})
                 </button>
                 
                 <button
