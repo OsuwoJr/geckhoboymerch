@@ -72,7 +72,7 @@ const products: Product[] = [
     id: 'revelation-sticker',
     name: 'Revelation Sticker',
     description: 'The Future ',
-    price: 350,
+    price: 1,
     image: '/images/sticker-holographic.jpg',
     type: 'sticker'
   }
