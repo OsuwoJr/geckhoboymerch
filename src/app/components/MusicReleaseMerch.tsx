@@ -12,6 +12,8 @@ interface MerchItem {
   image: string;
   backImage: string;
   description: string;
+  hasSize?: boolean;
+  hasColor?: boolean;
 }
 
 interface MusicRelease {
@@ -35,7 +37,9 @@ const musicReleases: MusicRelease[] = [
         price: 1200,
         image: "/images/ma-tee-1.jpg",
         backImage: "/images/ma-tee-1-back.jpg",
-        description: "Premium cotton t-shirt featuring Miles Apart artwork"
+        description: "Premium cotton t-shirt featuring Miles Apart artwork",
+        hasSize: true,
+        hasColor: true
       },
       {
         id: "ma-2",
@@ -43,7 +47,9 @@ const musicReleases: MusicRelease[] = [
         price: 1500,
         image: "/images/ma-tee-2.jpg",
         backImage: "/images/ma-tee-2-back.jpg",
-        description: "Limited edition graphic t-shirt with exclusive design"
+        description: "Limited edition graphic t-shirt with exclusive design",
+        hasSize: true,
+        hasColor: true
       },
       {
         id: "ma-3",
@@ -51,7 +57,9 @@ const musicReleases: MusicRelease[] = [
         price: 1000,
         image: "/images/ma-tee-3.jpg",
         backImage: "/images/ma-tee-3-back.jpg",
-        description: "Premium deluxe edition with special packaging"
+        description: "Premium deluxe edition with special packaging",
+        hasSize: true,
+        hasColor: true
       },
       {
         id: "ma-art",
@@ -59,7 +67,9 @@ const musicReleases: MusicRelease[] = [
         price: 1500,
         image: "/images/ma-art.jpg",
         backImage: "/images/ma-art-back.jpg",
-        description: "High-quality framed album artwork"
+        description: "High-quality framed album artwork",
+        hasSize: false,
+        hasColor: false
       }
     ]
   },
@@ -75,7 +85,9 @@ const musicReleases: MusicRelease[] = [
         price: 1200,
         image: "/images/iwik-tee-1.jpg",
         backImage: "/images/iwik-tee-1-back.jpg",
-        description: "Premium cotton t-shirt featuring I Wish I Knew artwork"
+        description: "Premium cotton t-shirt featuring I Wish I Knew artwork",
+        hasSize: true,
+        hasColor: true
       },
       {
         id: "iwik-2",
@@ -83,7 +95,9 @@ const musicReleases: MusicRelease[] = [
         price: 1500,
         image: "/images/iwik-tee-2.jpg",
         backImage: "/images/iwik-tee-2-back.jpg",
-        description: "Limited edition graphic t-shirt with exclusive design"
+        description: "Limited edition graphic t-shirt with exclusive design",
+        hasSize: true,
+        hasColor: true
       },
       {
         id: "iwik-3",
@@ -91,7 +105,9 @@ const musicReleases: MusicRelease[] = [
         price: 1000,
         image: "/images/iwik-tee-3.jpg",
         backImage: "/images/iwik-tee-3-back.jpg",
-        description: "Premium deluxe edition with special packaging"
+        description: "Premium deluxe edition with special packaging",
+        hasSize: true,
+        hasColor: true
       },
       {
         id: "iwik-art",
@@ -99,14 +115,33 @@ const musicReleases: MusicRelease[] = [
         price: 1500,
         image: "/images/iwik-art.jpg",
         backImage: "/images/iwik-art-back.jpg",
-        description: "High-quality framed album artwork"
+        description: "High-quality framed album artwork",
+        hasSize: false,
+        hasColor: false
       }
     ]
   }
 ];
 
+const sizes = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
+const basicColors = ['Black', 'White'];
+
 const MusicReleaseMerch: React.FC = () => {
   const [flippedStates, setFlippedStates] = useState<Record<string, boolean>>({});
+  
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, { size?: string; color?: string; customColor?: string }>>(
+    musicReleases.reduce((acc, release) => {
+      release.items.forEach(item => {
+        acc[item.id] = {
+          size: item.hasSize ? 'M' : undefined,
+          color: item.hasColor ? 'Black' : undefined,
+          customColor: ''
+        };
+      });
+      return acc;
+    }, {} as Record<string, { size?: string; color?: string; customColor?: string }>)
+  );
+
   const addItem = useCartStore((state: CartStore) => state.addItem);
 
   const toggleFlip = (itemId: string, event: React.MouseEvent | React.TouchEvent) => {
@@ -118,13 +153,30 @@ const MusicReleaseMerch: React.FC = () => {
     }));
   };
 
+  const updateItemOption = (itemId: string, option: string, value: string) => {
+    setSelectedOptions(prev => ({
+      ...prev,
+      [itemId]: {
+        ...prev[itemId],
+        [option]: value
+      }
+    }));
+  };
+
   const addToCart = (item: MerchItem) => {
+    const options = selectedOptions[item.id];
+    const finalColor = options.color === 'Custom' && options.customColor 
+      ? options.customColor 
+      : options.color;
+
     addItem({
       id: item.id,
       name: item.name,
       price: item.price,
       image: item.image,
-      quantity: 1
+      quantity: 1,
+      size: options.size,
+      color: finalColor
     });
   };
 
@@ -185,6 +237,50 @@ const MusicReleaseMerch: React.FC = () => {
                     <p className="text-gray-400 mb-4 text-sm leading-relaxed">
                       {item.description}
                     </p>
+                    
+                    {/* Size Selection */}
+                    {item.hasSize && (
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-300 mb-2">Size:</label>
+                        <select
+                          value={selectedOptions[item.id]?.size || ''}
+                          onChange={(e) => updateItemOption(item.id, 'size', e.target.value)}
+                          className="w-full p-2 bg-[rgba(17,17,17,0.9)] border border-[rgba(160,185,33,0.3)] rounded text-white focus:border-[#a0b921] focus:outline-none"
+                        >
+                          {sizes.map(size => (
+                            <option key={size} value={size}>{size}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
+                    {/* Color Selection */}
+                    {item.hasColor && (
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-300 mb-2">Color:</label>
+                        <select
+                          value={selectedOptions[item.id]?.color || ''}
+                          onChange={(e) => updateItemOption(item.id, 'color', e.target.value)}
+                          className="w-full p-2 bg-[rgba(17,17,17,0.9)] border border-[rgba(160,185,33,0.3)] rounded text-white focus:border-[#a0b921] focus:outline-none mb-2"
+                        >
+                          {basicColors.map(color => (
+                            <option key={color} value={color}>{color}</option>
+                          ))}
+                          <option value="Custom">Suggest Custom Color</option>
+                        </select>
+                        
+                        {selectedOptions[item.id]?.color === 'Custom' && (
+                          <input
+                            type="text"
+                            placeholder="Enter preferred color (subject to availability)"
+                            value={selectedOptions[item.id]?.customColor || ''}
+                            onChange={(e) => updateItemOption(item.id, 'customColor', e.target.value)}
+                            className="w-full p-2 bg-[rgba(17,17,17,0.9)] border border-[rgba(160,185,33,0.3)] rounded text-white focus:border-[#a0b921] focus:outline-none text-sm"
+                          />
+                        )}
+                      </div>
+                    )}
+
                     <p className="text-2xl font-bold text-[#a0b921] mb-4">
                       KES {item.price.toLocaleString()}
                     </p>

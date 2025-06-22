@@ -6,27 +6,40 @@ export interface CartItem {
   price: number;
   quantity: number;
   image: string;
+  size?: string;
+  color?: string;
 }
 
 export interface CartStore {
   items: CartItem[];
   addItem: (item: CartItem) => void;
-  removeItem: (id: string) => void;
-  updateQuantity: (id: string, quantity: number) => void;
+  removeItem: (id: string, size?: string, color?: string) => void;
+  updateQuantity: (id: string, quantity: number, size?: string, color?: string) => void;
   clearCart: () => void;
   getTotal: () => number;
 }
+
+// Helper function to create unique cart item key
+const getItemKey = (id: string, size?: string, color?: string) => {
+  return `${id}-${size || 'no-size'}-${color || 'no-color'}`;
+};
 
 export const useCartStore = create<CartStore>((set, get) => ({
   items: [],
   
   addItem: (item) => {
     set((state) => {
-      const existingItem = state.items.find((i) => i.id === item.id);
+      const itemKey = getItemKey(item.id, item.size, item.color);
+      const existingItem = state.items.find((i) => 
+        getItemKey(i.id, i.size, i.color) === itemKey
+      );
+      
       if (existingItem) {
         return {
           items: state.items.map((i) =>
-            i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
+            getItemKey(i.id, i.size, i.color) === itemKey 
+              ? { ...i, quantity: i.quantity + 1 } 
+              : i
           ),
         };
       }
@@ -34,17 +47,23 @@ export const useCartStore = create<CartStore>((set, get) => ({
     });
   },
 
-  removeItem: (id) => {
+  removeItem: (id, size, color) => {
+    const itemKey = getItemKey(id, size, color);
     set((state) => ({
-      items: state.items.filter((item) => item.id !== id),
+      items: state.items.filter((item) => 
+        getItemKey(item.id, item.size, item.color) !== itemKey
+      ),
     }));
   },
 
-  updateQuantity: (id, quantity) => {
+  updateQuantity: (id, quantity, size, color) => {
     if (quantity < 1) return;
+    const itemKey = getItemKey(id, size, color);
     set((state) => ({
       items: state.items.map((item) =>
-        item.id === id ? { ...item, quantity } : item
+        getItemKey(item.id, item.size, item.color) === itemKey
+          ? { ...item, quantity }
+          : item
       ),
     }));
   },

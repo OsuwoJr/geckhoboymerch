@@ -63,6 +63,23 @@
   margin: 0 0 8px 0;
 }
 
+.item-options {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.option-tag {
+  background: #333;
+  color: #a0b921;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: 1px solid rgba(160, 185, 33, 0.3);
+}
+
 .price {
   color: #4CAF50;
   font-weight: 600;

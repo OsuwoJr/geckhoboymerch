@@ -92,8 +92,8 @@ export default function Cart() {
           ) : (
             <>
               <div className="cart-items">
-                {items.map(item => (
-                  <div key={item.id} className="cart-item">
+                {items.map((item, index) => (
+                  <div key={`${item.id}-${item.size}-${item.color}-${index}`} className="cart-item">
                     <Image 
                       src={item.image}
                       alt={item.name}
@@ -103,14 +103,20 @@ export default function Cart() {
                     />
                     <div className="item-details">
                       <h4>{item.name}</h4>
+                      {(item.size || item.color) && (
+                        <div className="item-options">
+                          {item.size && <span className="option-tag">Size: {item.size}</span>}
+                          {item.color && <span className="option-tag">Color: {item.color}</span>}
+                        </div>
+                      )}
                       <p className="price">KES {item.price.toLocaleString()}</p>
                       <div className="quantity-controls">
-                        <button onClick={() => updateQuantity(item.id, item.quantity - 1)}>-</button>
+                        <button onClick={() => updateQuantity(item.id, item.quantity - 1, item.size, item.color)}>-</button>
                         <span>{item.quantity}</span>
-                        <button onClick={() => updateQuantity(item.id, item.quantity + 1)}>+</button>
+                        <button onClick={() => updateQuantity(item.id, item.quantity + 1, item.size, item.color)}>+</button>
                       </div>
                     </div>
-                    <button className="remove-btn" onClick={() => removeItem(item.id)}>×</button>
+                    <button className="remove-btn" onClick={() => removeItem(item.id, item.size, item.color)}>×</button>
                   </div>
                 ))}
               </div>

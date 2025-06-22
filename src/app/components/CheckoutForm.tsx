@@ -129,10 +129,20 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({
     }
 
     try {
-      // Format items as a simple string
-      const itemsList = items.map(item => 
-        `${item.name} x${item.quantity} @ KES ${item.price} = KES ${item.price * item.quantity}`
-      ).join('\n');
+      // Format items with size and color information
+      const itemsList = items.map(item => {
+        let itemDetails = item.name;
+        
+        // Add size and color information if available
+        if (item.size) {
+          itemDetails += ` - Size: ${item.size}`;
+        }
+        if (item.color) {
+          itemDetails += ` - Color: ${item.color}`;
+        }
+        
+        return `${itemDetails} x${item.quantity} @ KES ${item.price} = KES ${item.price * item.quantity}`;
+      }).join('\n');
 
       // Create submission data
       const submissionData = {

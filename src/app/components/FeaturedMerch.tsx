@@ -13,6 +13,8 @@ interface Product {
   image: string;
   backImage?: string;
   type: 'merch' | 'sticker';
+  hasSize?: boolean;
+  hasColor?: boolean;
 }
 
 const products: Product[] = [
@@ -23,7 +25,9 @@ const products: Product[] = [
     price: 1000,
     image: '/images/classic-tee-front.jpg',
     backImage: '/images/classic-tee-back.jpg',
-    type: 'merch'
+    type: 'merch',
+    hasSize: true,
+    hasColor: true
   },
   {
     id: 'street-hoodie',
@@ -32,7 +36,9 @@ const products: Product[] = [
     price: 3000,
     image: '/images/hoodie-front.jpg',
     backImage: '/images/hoodie-back.jpg',
-    type: 'merch'
+    type: 'merch',
+    hasSize: true,
+    hasColor: true
   },
   {
     id: 'urban-cap',
@@ -41,7 +47,9 @@ const products: Product[] = [
     price: 800,
     image: '/images/cap-front.jpg',
     backImage: '/images/cap-back.jpg',
-    type: 'merch'
+    type: 'merch',
+    hasSize: false,
+    hasColor: true
   },
   
   {
@@ -50,7 +58,9 @@ const products: Product[] = [
     description: 'Vibrant neon-style GECKHOBOY signature sticker.',
     price: 350,
     image: '/images/sticker-neon.jpg',
-    type: 'sticker'
+    type: 'sticker',
+    hasSize: false,
+    hasColor: false
   },
   {
     id: 'genesis-sticker',
@@ -58,7 +68,9 @@ const products: Product[] = [
     description: 'The Origin ',
     price: 350,
     image: '/images/sticker-glow.jpg',
-    type: 'sticker'
+    type: 'sticker',
+    hasSize: false,
+    hasColor: false
   },
   {
     id: 'exodus-sticker',
@@ -66,7 +78,9 @@ const products: Product[] = [
     description: 'The Journey ',
     price: 350,
     image: '/images/sticker-silhouette.jpg',
-    type: 'sticker'
+    type: 'sticker',
+    hasSize: false,
+    hasColor: false
   },
   {
     id: 'revelation-sticker',
@@ -74,9 +88,14 @@ const products: Product[] = [
     description: 'The Future ',
     price: 350,
     image: '/images/sticker-holographic.jpg',
-    type: 'sticker'
+    type: 'sticker',
+    hasSize: false,
+    hasColor: false
   }
 ];
+
+const sizes = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
+const basicColors = ['Black', 'White'];
 
 const FeaturedMerch: React.FC = () => {
   const [flippedStates, setFlippedStates] = useState<Record<string, boolean>>(
@@ -84,6 +103,17 @@ const FeaturedMerch: React.FC = () => {
       acc[product.id] = false;
       return acc;
     }, {} as Record<string, boolean>)
+  );
+
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, { size?: string; color?: string; customColor?: string }>>(
+    products.reduce((acc, product) => {
+      acc[product.id] = {
+        size: product.hasSize ? 'M' : undefined,
+        color: product.hasColor ? 'Black' : undefined,
+        customColor: ''
+      };
+      return acc;
+    }, {} as Record<string, { size?: string; color?: string; customColor?: string }>)
   );
 
   const addItem = useCartStore((state: CartStore) => state.addItem);
@@ -97,13 +127,30 @@ const FeaturedMerch: React.FC = () => {
     }));
   };
 
+  const updateProductOption = (productId: string, option: string, value: string) => {
+    setSelectedOptions(prev => ({
+      ...prev,
+      [productId]: {
+        ...prev[productId],
+        [option]: value
+      }
+    }));
+  };
+
   const addToCart = (product: Product) => {
+    const options = selectedOptions[product.id];
+    const finalColor = options.color === 'Custom' && options.customColor 
+      ? options.customColor 
+      : options.color;
+
     addItem({
       id: product.id,
       name: product.name,
       price: product.price,
       image: product.image,
-      quantity: 1
+      quantity: 1,
+      size: options.size,
+      color: finalColor
     });
   };
 
@@ -163,6 +210,50 @@ const FeaturedMerch: React.FC = () => {
                 <p className="text-gray-400 mb-4 text-sm leading-relaxed">
                   {product.description}
                 </p>
+                
+                {/* Size Selection */}
+                {product.hasSize && (
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Size:</label>
+                    <select
+                      value={selectedOptions[product.id]?.size || ''}
+                      onChange={(e) => updateProductOption(product.id, 'size', e.target.value)}
+                      className="w-full p-2 bg-[rgba(17,17,17,0.9)] border border-[rgba(160,185,33,0.3)] rounded text-white focus:border-[#a0b921] focus:outline-none"
+                    >
+                      {sizes.map(size => (
+                        <option key={size} value={size}>{size}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Color Selection */}
+                {product.hasColor && (
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Color:</label>
+                    <select
+                      value={selectedOptions[product.id]?.color || ''}
+                      onChange={(e) => updateProductOption(product.id, 'color', e.target.value)}
+                      className="w-full p-2 bg-[rgba(17,17,17,0.9)] border border-[rgba(160,185,33,0.3)] rounded text-white focus:border-[#a0b921] focus:outline-none mb-2"
+                    >
+                      {basicColors.map(color => (
+                        <option key={color} value={color}>{color}</option>
+                      ))}
+                      <option value="Custom">Suggest Custom Color</option>
+                    </select>
+                    
+                    {selectedOptions[product.id]?.color === 'Custom' && (
+                      <input
+                        type="text"
+                        placeholder="Enter preferred color (subject to availability)"
+                        value={selectedOptions[product.id]?.customColor || ''}
+                        onChange={(e) => updateProductOption(product.id, 'customColor', e.target.value)}
+                        className="w-full p-2 bg-[rgba(17,17,17,0.9)] border border-[rgba(160,185,33,0.3)] rounded text-white focus:border-[#a0b921] focus:outline-none text-sm"
+                      />
+                    )}
+                  </div>
+                )}
+
                 <p className="text-2xl font-bold text-[#a0b921] mb-4">
                   KES {product.price.toLocaleString()}
                 </p>

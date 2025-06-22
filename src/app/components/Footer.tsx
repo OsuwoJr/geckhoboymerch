@@ -12,7 +12,8 @@ const socialLinks = [
 
 const followLinks = [
   { name: 'Instagram', icon: 'fab fa-instagram', href: 'https://instagram.com/geckhoboy', color: '#E1306C' },
-  { name: 'TikTok', icon: 'fab fa-tiktok', href: 'https://tiktok.com/@geckhoboy', color: '#000000' }
+  { name: 'TikTok', icon: 'fab fa-tiktok', href: 'https://tiktok.com/@geckhoboy', color: '#000000' },
+  { name: 'WhatsApp', icon: 'fab fa-whatsapp', href: 'https://whatsapp.com/channel/0029VbAMv7x7IUYbubERRf3D', color: '#25D366' }
 ];
 
 const Footer: React.FC = () => {
